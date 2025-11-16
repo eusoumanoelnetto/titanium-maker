@@ -1,5 +1,46 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
+
+// LazyVideo: only sets video src when the element enters viewport to improve load/time-to-interactive
+const LazyVideo: React.FC<{ src: string; className?: string }> = ({ src, className }) => {
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const [visible, setVisible] = useState(false);
+
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    setVisible(true);
+                    obs.disconnect();
+                }
+            });
+        }, { threshold: 0.1 });
+        obs.observe(el);
+        return () => obs.disconnect();
+    }, []);
+
+    return (
+        <div ref={containerRef} className="w-full h-full bg-gray-800 flex items-center justify-center overflow-hidden">
+            {visible ? (
+                <video
+                    src={src}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    preload="metadata"
+                    className={className}
+                >
+                    Seu navegador não suporta a tag de vídeo.
+                </video>
+            ) : (
+                <div className="w-full h-full bg-gradient-to-r from-gray-800 to-gray-900 animate-pulse" />
+            )}
+        </div>
+    );
+};
 
 // --- Landing Page Sections ---
 const Header = () => (
@@ -163,16 +204,7 @@ const Portfolio = () => {
             <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
                 <a href="https://www.instagram.com/reel/DPzRsMVjwYE/" target="_blank" rel="noopener noreferrer" className="block bg-gray-800 rounded-lg overflow-hidden group shadow-lg transition-transform transform hover:-translate-y-2">
                     <div className="relative w-full h-56">
-                        <video 
-                            src="https://i.imgur.com/4wurvfO.mp4" 
-                            autoPlay 
-                            loop 
-                            muted 
-                            playsInline
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        >
-                            Seu navegador não suporta a tag de vídeo.
-                        </video>
+                        <LazyVideo src="https://i.imgur.com/4wurvfO.mp4" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                         <div className="absolute inset-0 bg-black/20 group-hover:bg-black/50 transition-colors duration-300"></div>
                         <div className="absolute top-2 right-2 p-1.5 bg-black/40 rounded-full">
                             <i className="fa-solid fa-arrow-up-right-from-square text-xs text-white"></i>
@@ -187,16 +219,7 @@ const Portfolio = () => {
                 {portfolioProjects.map((project, i) => (
                     <a key={i} href={project.link} target="_blank" rel="noopener noreferrer" className="block bg-gray-800 rounded-lg overflow-hidden group shadow-lg transition-transform transform hover:-translate-y-2">
                         <div className="relative w-full h-56">
-                            <video 
-                                src={project.videoUrl} 
-                                autoPlay 
-                                loop 
-                                muted 
-                                playsInline
-                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                            >
-                                Seu navegador não suporta a tag de vídeo.
-                            </video>
+                            <LazyVideo src={project.videoUrl} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                             <div className="absolute inset-0 bg-black/20 group-hover:bg-black/50 transition-colors duration-300"></div>
                             <div className="absolute top-2 right-2 p-1.5 bg-black/40 rounded-full">
                                 <i className="fa-solid fa-arrow-up-right-from-square text-xs text-white"></i>
